@@ -18,7 +18,7 @@ For detailed download and installation instructions, see [DOWNLOAD.md](DOWNLOAD.
 
 - Executable fat JAR: `target/NetworkPacketAnalyzer.jar`
 - Cross-platform launch scripts: `run.sh` and `run.bat`
-- Java 21 LTS target runtime
+- Java 23 target runtime
 - Bundled dependencies via Maven Shade plugin
 - Distribution archives created in the `dist/` folder
 - Comprehensive user documentation in `DISTRIBUTION.md` and `USER-GUIDE.md`
@@ -27,7 +27,7 @@ For detailed download and installation instructions, see [DOWNLOAD.md](DOWNLOAD.
 
 ### Prerequisites
 
-- Java 21 LTS or later
+- Java 23 or later
 - LibPcap installed on the host system
 
 ### Run the Application
@@ -69,9 +69,9 @@ The application is packaged as a fat JAR so users do not need to resolve depende
 
 - `DISTRIBUTION.md` — detailed distribution guide
 - `USER-GUIDE.md` — end-user quick start and troubleshooting
-- `JAVA_21_UPGRADE.md` — Java version upgrade details
+- `JAVA_23_UPGRADE.md` — Java version upgrade details
 - `README-DOWNLOAD.md` — download guide
 
 ## Support
 
-If you experience issues, first verify that Java 21 is installed and that libpcap is available on your operating system.
+If you experience issues, first verify that Java 23 is installed and that libpcap is available on your operating system.

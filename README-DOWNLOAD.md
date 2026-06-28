@@ -37,7 +37,7 @@ This is a **fat JAR** (uber JAR) containing:
   - Troubleshooting guide
   - Advanced usage examples
 
-- **[JAVA_21_UPGRADE.md](JAVA_21_UPGRADE.md)** - Java 21 LTS details
+- **[JAVA_23_UPGRADE.md](JAVA_23_UPGRADE.md)** - Java 23 details
   - Configuration details
   - Build instructions
   - Feature availability
@@ -86,14 +86,14 @@ tar -czf NetworkPacketAnalyzer-1.0-SNAPSHOT.tar.gz \
 ✅ run.sh                               (Linux/macOS launcher - executable)
 ✅ run.bat                              (Windows launcher)
 ✅ DISTRIBUTION.md                      (user guide & distribution instructions)
-✅ JAVA_21_UPGRADE.md                   (Java 21 configuration details)
+✅ JAVA_23_UPGRADE.md                   (Java 23 configuration details)
 ```
 
 ## 🔧 System Requirements for Users
 
 | Component | Requirement | Notes |
 |-----------|-------------|-------|
-| **Java** | 21 LTS or later | Required to run JAR |
+| **Java** | 23 or later | Required to run JAR |
 | **LibPcap** | Development libraries | Required for packet capture |
 | **OS** | Windows/macOS/Linux | Cross-platform support |
 
@@ -101,16 +101,16 @@ tar -czf NetworkPacketAnalyzer-1.0-SNAPSHOT.tar.gz \
 
 **Linux**:
 ```bash
-sudo apt install openjdk-21-jdk libpcap-dev
+sudo apt install openjdk-23-jdk libpcap-dev
 ```
 
 **macOS**:
 ```bash
-brew install openjdk@21 libpcap
+brew install openjdk@23 libpcap
 ```
 
 **Windows**:
-1. Download Java 21 from https://jdk.java.net/21/
+1. Download Java 23 from https://jdk.java.net/23/
 2. LibPcap usually pre-installed or available
 
 ## ✨ Quick Distribution Steps
@@ -175,7 +175,7 @@ The JAR file is completely self-contained and can be:
 - Distributed in app stores
 - Run from any directory
 
-All dependencies are bundled. Users only need Java 21+ and LibPcap installed.
+All dependencies are bundled. Users only need Java 23+ and LibPcap installed.
 
 ---
 

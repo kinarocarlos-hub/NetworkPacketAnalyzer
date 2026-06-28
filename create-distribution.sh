@@ -83,11 +83,11 @@ PACKAGE CONTENTS:
 - run.bat                            (Windows launcher)
 - DISTRIBUTION.md                   (Complete user guide)
 - README-DOWNLOAD.md                (Quick start guide)
-- JAVA_21_UPGRADE.md                (Java 21 details)
+- JAVA_23_UPGRADE.md                (Java 23 details)
 
 SYSTEM REQUIREMENTS:
 ====================
-- Java 21 LTS or later
+- Java 23 or later
 - LibPcap development libraries
 - Windows/macOS/Linux
 

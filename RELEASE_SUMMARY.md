@@ -86,7 +86,7 @@ Each download package contains:
 
 ### Technical
 - **[RELEASE_NOTES.md](RELEASE_NOTES.md)** — Release details and changelog
-- **[JAVA_21_UPGRADE.md](JAVA_21_UPGRADE.md)** — Java 21 LTS configuration details
+- **[JAVA_23_UPGRADE.md](JAVA_23_UPGRADE.md)** — Java 23 configuration details
 
 ---
 
@@ -117,9 +117,8 @@ See **[ANNOUNCEMENT.md](ANNOUNCEMENT.md)** for pre-written announcements for:
 - Windows, macOS, Linux
 - Identical functionality across all platforms
 
-✅ **Java 21 LTS**
+✅ **Java 23**
 - Modern, stable Java runtime
-- Long-term support
 - Performance optimizations
 
 ✅ **Easy Installation**

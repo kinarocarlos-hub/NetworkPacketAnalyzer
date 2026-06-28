@@ -36,19 +36,19 @@ After downloading, follow these steps:
 
 #### Windows
 1. Extract the `.zip` file
-2. Ensure Java 21 is installed
+2. Ensure Java 23 is installed
 3. Open Command Prompt in the extracted folder
 4. Run: `run.bat`
 
 #### macOS/Linux
 1. Extract the `.tar.gz` file
-2. Ensure Java 21 and LibPcap are installed:
+2. Ensure Java 23 and LibPcap are installed:
    ```bash
    # macOS
-   brew install openjdk@21 libpcap
+   brew install openjdk@23 libpcap
    
    # Linux (Debian/Ubuntu)
-   sudo apt install openjdk-21-jdk libpcap-dev
+   sudo apt install openjdk-23-jdk libpcap-dev
    ```
 3. Open Terminal in the extracted folder
 4. Run: `chmod +x run.sh && sudo ./run.sh`
@@ -59,14 +59,14 @@ After downloading, follow these steps:
 
 ### System Requirements
 
-- **Java**: 21 LTS or later (download from https://jdk.java.net/21/)
+- **Java**: 23 or later (download from https://jdk.java.net/23/)
 - **LibPcap**: Network packet capture library (usually pre-installed on macOS)
 - **OS**: Windows, macOS, or Linux
 
 ### Troubleshooting
 
 **Java not found?**
-Install Java 21 LTS from: https://jdk.java.net/21/
+Install Java 23 from: https://jdk.java.net/23/
 
 **LibPcap not found?**
 ```bash
@@ -111,7 +111,7 @@ NetworkPacketAnalyzer-1.0-SNAPSHOT/
 
 v1.0.0 highlights:
 - ✅ Packaged as standalone executable JAR (fat JAR)
-- ✅ Java 21 LTS target runtime
+- ✅ Java 23 target runtime
 - ✅ Cross-platform launcher scripts (run.sh for Unix, run.bat for Windows)
 - ✅ All dependencies bundled
 - ✅ SHA256 checksums included for verification

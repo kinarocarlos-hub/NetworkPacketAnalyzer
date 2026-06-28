@@ -80,16 +80,16 @@ zip -r NetworkPacketAnalyzer-1.0-SNAPSHOT.zip NetworkPacketAnalyzer-1.0-SNAPSHOT
 ## Installation Instructions for End Users
 
 ### Prerequisites
-- **Java 21 LTS or later** (required)
+- **Java 23 or later** (required)
 - **LibPcap** (for packet capture - platform-specific)
 
 ### Installation Steps
 
 #### Linux
 ```bash
-# 1. Install Java 21 (if not already installed)
+# 1. Install Java 23 (if not already installed)
 sudo apt update
-sudo apt install openjdk-21-jdk-headless
+sudo apt install openjdk-23-jdk-headless
 
 # 2. Install LibPcap development libraries
 sudo apt install libpcap-dev
@@ -104,8 +104,8 @@ sudo ./run.sh    # (requires sudo for packet capture)
 
 #### macOS
 ```bash
-# 1. Install Java 21 (using Homebrew)
-brew install openjdk@21
+# 1. Install Java 23 (using Homebrew)
+brew install openjdk@23
 
 # 2. Install LibPcap (usually pre-installed, or use Homebrew)
 brew install libpcap
@@ -120,7 +120,7 @@ sudo ./run.sh    # (requires sudo for packet capture)
 
 #### Windows
 ```cmd
-REM 1. Install Java 21 from https://jdk.java.net/21/
+REM 1. Install Java 23 from https://jdk.java.net/23/
 
 REM 2. Extract the distribution package (use Windows Explorer or 7-Zip)
 REM    Extract NetworkPacketAnalyzer-1.0-SNAPSHOT.zip
@@ -159,7 +159,7 @@ java -jar NetworkPacketAnalyzer.jar
 ## Troubleshooting
 
 ### Issue: "Java not found"
-**Solution**: Install Java 21 LTS
+**Solution**: Install Java 23
 - Linux: `sudo apt install openjdk-21-jdk-headless`
 - macOS: `brew install openjdk@21`
 - Windows: Download from https://jdk.java.net/21/

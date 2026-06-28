@@ -11,14 +11,14 @@ Download the standalone app: https://github.com/kinarocarlos-hub/NetworkPacketAn
 ✨ Features:
 - Self-contained Java executable (2.9 MB)
 - Cross-platform (Windows, macOS, Linux)
-- Java 21 LTS
+- Java 23
 - All dependencies bundled
 
 📥 Get it now:
   • Windows: download .zip → extract → run `run.bat`
   • macOS/Linux: download .tar.gz → extract → run `./run.sh`
 
-Requirements: Java 21 + LibPcap
+Requirements: Java 23 + LibPcap
 
 🔗 Repo: https://github.com/kinarocarlos-hub/NetworkPacketAnalyzer
 ```
@@ -34,7 +34,7 @@ NetworkPacketAnalyzer is now packaged as a standalone, portable JAR file with al
 
 ✨ Key Highlights:
 ✓ Fat JAR packaging (2.9 MB executable)
-✓ Java 21 LTS runtime
+✓ Java 23 runtime
 ✓ Cross-platform: Windows, macOS, Linux
 ✓ Launcher scripts included (run.sh & run.bat)
 ✓ SHA256 checksums for verification
@@ -46,7 +46,7 @@ NetworkPacketAnalyzer is now packaged as a standalone, portable JAR file with al
 
 🚀 Quick Start:
   1. Download the package for your OS
-  2. Install Java 21 (if not already installed)
+  2. Install Java 23 (if not already installed)
   3. Install LibPcap (usually pre-installed on macOS)
   4. Extract and run: `./run.sh` (Linux/macOS) or `run.bat` (Windows)
 
@@ -59,7 +59,7 @@ NetworkPacketAnalyzer is now packaged as a standalone, portable JAR file with al
 https://github.com/kinarocarlos-hub/NetworkPacketAnalyzer/releases/tag/v1.0.0
 
 💻 Requirements:
-  • Java 21 LTS or later
+  • Java 23 or later
   • LibPcap development libraries
   • Windows, macOS, or Linux
 
@@ -77,7 +77,7 @@ Download the standalone app now:
 📥 https://github.com/kinarocarlos-hub/NetworkPacketAnalyzer/releases/tag/v1.0.0
 
 ✨ Self-contained JAR for Windows, macOS & Linux
-✓ Java 21 LTS
+✓ Java 23
 ✓ All dependencies bundled
 ✓ Ready to run
 
@@ -92,7 +92,7 @@ After months of development, we're thrilled to launch NetworkPacketAnalyzer as a
 
 🎯 Highlights:
 • Standalone executable JAR (2.9 MB)
-• Java 21 LTS for modern performance & security
+• Java 23 for modern performance & security
 • Cross-platform support: Windows, macOS, Linux
 • Complete documentation & installer scripts
 • Verified with SHA256 checksums
@@ -139,7 +139,7 @@ For easy sharing:
 Before sharing, verify:
 - [ ] Download links are active and tested
 - [ ] Installation instructions are clear
-- [ ] Java 21 requirement is documented
+- [ ] Java 23 requirement is documented
 - [ ] LibPcap requirement is documented
 - [ ] Checksums are accessible
 - [ ] Release notes are visible

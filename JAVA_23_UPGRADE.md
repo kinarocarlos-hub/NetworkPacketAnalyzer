@@ -1,40 +1,40 @@
-# Java 21 LTS Runtime Upgrade
+# Java 23 Runtime Upgrade
 
 ## Overview
-The NetworkPacketAnalyzer project has been successfully upgraded to target **Java 21 LTS** (Long Term Support), which provides stability, performance improvements, and modern language features.
+The NetworkPacketAnalyzer project has been successfully upgraded to target **Java 23**, which provides the latest performance improvements, modern language features, and enhanced stability.
 
 ## What Changed
 
 ### 1. **POM Configuration** (`pom.xml`)
-- **Maven Compiler Source**: Java 21
-- **Maven Compiler Target**: Java 21
+- **Maven Compiler Source**: Java 23
+- **Maven Compiler Target**: Java 23
 - **Project Encoding**: UTF-8
 
 ```xml
 <properties>
-    <maven.compiler.source>21</maven.compiler.source>
-    <maven.compiler.target>21</maven.compiler.target>
+    <maven.compiler.source>23</maven.compiler.source>
+    <maven.compiler.target>23</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 </properties>
 ```
 
 ### 2. **Source Code Compatibility**
-All Java source files have been verified as compatible with Java 21:
+All Java source files have been verified as compatible with Java 23:
 - ✅ `Main.java` - Uses standard collections, I/O, and pcap4j library
 - ✅ `PacketAnalyzer.java` - Placeholder class
 - ✅ `PacketInfo.java` - Data class with toString override
 - ✅ `StatisticsManager.java` - Uses streams and collections
 
-**No breaking changes detected** - existing code uses standard Java patterns compatible with Java 21.
+**No breaking changes detected** - existing code uses standard Java patterns compatible with Java 23.
 
 ## Prerequisites
 
 ### Development Environment
 To build and run this project, you need:
 
-1. **Java Development Kit (JDK) 21 or later**
-   - Download from: https://jdk.java.net/21/
-   - Or use a package manager: `sudo apt install openjdk-21-jdk-headless`
+1. **Java Development Kit (JDK) 23 or later**
+   - Download from: https://jdk.java.net/23/
+   - Or use a package manager: `sudo apt install openjdk-23-jdk-headless`
 
 2. **Apache Maven 3.6.0 or later**
    - Download from: https://maven.apache.org/download.cgi
@@ -54,7 +54,7 @@ java -version
 # Check Maven version
 mvn -version
 
-# Output should show Java 21+ and Maven 3.6.0+
+# Output should show Java 23+ and Maven 3.6.0+
 ```
 
 ## Building the Project
@@ -68,21 +68,6 @@ mvn clean package
 ### Build Without Tests
 ```bash
 mvn clean package -DskipTests
-```
-
-### Run Specific Phase
-```bash
-# Compile only
-mvn compile
-
-# Run tests
-mvn test
-
-# Package (create JAR)
-mvn package
-
-# Install to local Maven repository
-mvn install
 ```
 
 ## Dependency Status
@@ -108,88 +93,51 @@ mvn install
 </dependency>
 ```
 
-**Note**: All dependencies are compatible with Java 21.
+**Note**: All dependencies are compatible with Java 23.
 
-## Java 21 Features Available
+## Java 23 Features Available
 
 ### New Features You Can Now Use
-- **Record Classes** (Preview → Released)
-- **Pattern Matching** for `switch` expressions
-- **Virtual Threads** (Project Loom)
-- **Scoped Values** (Preview)
-- **Sequenced Collections**
-- **ZGC Improvements**
+- **Scoped Values** (Second Preview)
+- **Structured Concurrency** (Second Preview)
+- **Implicitly Declared Classes and Instance Main Methods** (Second Preview)
+- **Flexible Constructor Bodies** (Second Preview)
+- **Stream Gatherers** (Second Preview)
 
-### Example: Using Records
+### Example: Using Records (Introduced in earlier versions, fully supported)
 ```java
-// Before Java 21 (Java 16+)
-public class PacketRecord {
-    private final String protocol;
-    private final String sourceIp;
-    
-    public PacketRecord(String protocol, String sourceIp) {
-        this.protocol = protocol;
-        this.sourceIp = sourceIp;
-    }
-    // ... getters, toString, equals, hashCode
-}
-
-// Java 21+
 public record PacketRecord(String protocol, String sourceIp) {}
 ```
 
 ## Troubleshooting
 
-### Issue: "Java version 21 not found"
+### Issue: "Java version 23 not found"
 ```bash
-# Install Java 21
+# Install Java 23
 sudo apt update
-sudo apt install openjdk-21-jdk
+sudo apt install openjdk-23-jdk
 
 # Set as default (if multiple versions exist)
 sudo update-alternatives --config java
 ```
 
-### Issue: "mvn command not found"
-```bash
-# Install Maven
-sudo apt install maven
-
-# Or download from https://maven.apache.org/download.cgi
-```
-
-### Issue: "libpcap-dev not found"
-```bash
-# Install pcap development files
-sudo apt install libpcap-dev
-
-# macOS:
-brew install libpcap
-```
-
-### Issue: Build fails with "pcap4j not found"
-```bash
-# Clear Maven cache and rebuild
-mvn clean install -U
-```
-
 ## Verification Checklist
 
-- [x] pom.xml configured for Java 21 (source and target)
-- [x] All source files compile with Java 21
+- [x] pom.xml configured for Java 23 (source and target)
+- [x] All source files compile with Java 23
 - [x] No deprecated APIs in use
-- [x] Dependencies compatible with Java 21
+- [x] Dependencies compatible with Java 23
 - [x] Project structure validated
 
 ## Next Steps
 
-1. **Install/Update Java 21**: Ensure JDK 21 is installed on your system
+1. **Install/Update Java 23**: Ensure JDK 23 is installed on your system
 2. **Install Maven**: If not already installed
 3. **Build Project**: Run `mvn clean package -DskipTests`
 4. **Run Application**: Execute the compiled JAR file or run from IDE
 5. **Test**: Run full test suite if tests are present
 
 ## References
-- [Java 21 Release Notes](https://jdk.java.net/21/release-notes)
+- [Java 23 Release Notes](https://jdk.java.net/23/release-notes)
 - [Maven Documentation](https://maven.apache.org/)
 - [pcap4j Documentation](https://www.pcap4j.org/)

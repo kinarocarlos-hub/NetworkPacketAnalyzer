@@ -6,30 +6,47 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PacketCaptureService {
 
-    private static final int BUFFER_SIZE = 1000;
-    private static final int TOP_TALKERS_LIMIT = 10;
-
-    private final BlockingQueue<PacketData> packetQueue = new LinkedBlockingQueue<>(BUFFER_SIZE);
-    private final PacketStatistics statistics = new PacketStatistics();
-    private final Map<String, Integer> sourceIpStats = new ConcurrentHashMap<>();
+    private final SessionManager sessionManager;
 
     private volatile boolean capturing = false;
     private Thread captureThread;
+    private String activeInterface;
 
-    public void startCapture() {
-        if (capturing) {
+    public PacketCaptureService(SessionManager sessionManager) {
+        this.sessionManager = sessionManager;
+    }
+
+    public List<String> getAvailableInterfaces() {
+        try {
+            return Pcaps.findAllDevs().stream()
+                    .map(PcapNetworkInterface::getName)
+                    .collect(Collectors.toList());
+        } catch (PcapNativeException e) {
+            return List.of();
+        }
+    }
+
+    public void startCapture(String interfaceName) {
+        if (capturing) return;
+        activeInterface = interfaceName != null ? interfaceName : detectDefaultInterface();
+        if (activeInterface == null) {
+            System.out.println("❌ No network interface found");
             return;
         }
-
         capturing = true;
         captureThread = new Thread(this::capturePackets);
         captureThread.setDaemon(true);
         captureThread.start();
-        System.out.println("✓ Packet capture started on wlan0");
+        System.out.println("✓ Packet capture started on " + activeInterface);
+    }
+
+    public void startCapture() {
+        startCapture(null);
     }
 
     public void stopCapture() {
@@ -44,28 +61,34 @@ public class PacketCaptureService {
         System.out.println("✗ Packet capture stopped");
     }
 
+    private String detectDefaultInterface() {
+        try {
+            List<PcapNetworkInterface> devs = Pcaps.findAllDevs();
+            // Prefer interfaces that are up and not loopback
+            return devs.stream()
+                    .filter(d -> !d.isLoopBack() && !d.getAddresses().isEmpty())
+                    .map(PcapNetworkInterface::getName)
+                    .findFirst()
+                    .orElseGet(() -> devs.isEmpty() ? null : devs.get(0).getName());
+        } catch (PcapNativeException e) {
+            return null;
+        }
+    }
+
     private void capturePackets() {
         try {
-            PcapNetworkInterface nif = Pcaps.getDevByName("wlan0");
+            var nif = Pcaps.getDevByName(activeInterface);
             if (nif == null) {
-                System.out.println("❌ Interface wlan0 not found");
+                System.out.println("❌ Interface " + activeInterface + " not found");
                 capturing = false;
                 return;
             }
 
-            PcapHandle handle = nif.openLive(
-                    65536,
-                    PcapNetworkInterface.PromiscuousMode.PROMISCUOUS,
-                    10);
+            var handle = nif.openLive(65536, PcapNetworkInterface.PromiscuousMode.PROMISCUOUS, 10);
 
             while (capturing) {
                 Packet packet = handle.getNextPacket();
-
-                if (packet == null) {
-                    continue;
-                }
-
-                processPacket(packet);
+                if (packet != null) processPacket(packet);
             }
 
             handle.close();
@@ -76,92 +99,64 @@ public class PacketCaptureService {
     }
 
     private void processPacket(Packet packet) {
-        statistics.incrementTotalPackets();
-
-        IpV4Packet ipPacket = packet.get(IpV4Packet.class);
-        if (ipPacket == null) {
-            return;
-        }
+        var ipPacket = packet.get(IpV4Packet.class);
+        if (ipPacket == null) return;
 
         String srcIp = ipPacket.getHeader().getSrcAddr().getHostAddress();
         String dstIp = ipPacket.getHeader().getDstAddr().getHostAddress();
-        int packetLength = packet.length();
+        int len = packet.length();
 
-        sourceIpStats.put(srcIp, sourceIpStats.getOrDefault(srcIp, 0) + 1);
+        String protocol = "IPv4";
+        int srcPort = 0;
+        int dstPort = 0;
 
-        TcpPacket tcpPacket = packet.get(TcpPacket.class);
+        var tcpPacket = packet.get(TcpPacket.class);
         if (tcpPacket != null) {
-            statistics.incrementTcpPackets();
-            int srcPort = tcpPacket.getHeader().getSrcPort().valueAsInt();
-            int dstPort = tcpPacket.getHeader().getDstPort().valueAsInt();
-            String protocol = getApplicationProtocol(dstPort);
-
-            PacketData data = new PacketData(protocol, srcIp, srcPort,
-                    dstIp, dstPort, packetLength);
-            addPacket(data);
+            protocol = getApplicationProtocol(tcpPacket.getHeader().getDstPort().valueAsInt());
+            srcPort = tcpPacket.getHeader().getSrcPort().valueAsInt();
+            dstPort = tcpPacket.getHeader().getDstPort().valueAsInt();
         } else {
-            UdpPacket udpPacket = packet.get(UdpPacket.class);
+            var udpPacket = packet.get(UdpPacket.class);
             if (udpPacket != null) {
-                statistics.incrementUdpPackets();
-                int srcPort = udpPacket.getHeader().getSrcPort().valueAsInt();
-                int dstPort = udpPacket.getHeader().getDstPort().valueAsInt();
-                String protocol = getApplicationProtocol(dstPort);
-
-                PacketData data = new PacketData(protocol, srcIp, srcPort,
-                        dstIp, dstPort, packetLength);
-                addPacket(data);
-            } else {
-                statistics.incrementOtherPackets();
-                PacketData data = new PacketData("IPv4", srcIp, 0,
-                        dstIp, 0, packetLength);
-                addPacket(data);
+                protocol = getApplicationProtocol(udpPacket.getHeader().getDstPort().valueAsInt());
+                srcPort = udpPacket.getHeader().getSrcPort().valueAsInt();
+                dstPort = udpPacket.getHeader().getDstPort().valueAsInt();
             }
         }
+
+        PacketData data = new PacketData(protocol, srcIp, srcPort, dstIp, dstPort, len);
+        
+        // Broadcast to relevant sessions
+        sessionManager.getAllSessions().forEach((username, session) -> {
+            String userIp = sessionManager.getUserIp(username);
+            // Admin sees everything, or if IP matches
+            if (userIp == null || srcIp.equals(userIp) || dstIp.equals(userIp)) {
+                session.addPacket(data);
+            }
+        });
+        sessionManager.getGlobalSession().addPacket(data);
     }
 
     private void addPacket(PacketData data) {
-        if (!packetQueue.offer(data)) {
-            packetQueue.poll();
-            packetQueue.offer(data);
-        }
-        System.out.println(data);
+        // Method removed as sessions handle adding
     }
 
     private String getApplicationProtocol(int port) {
         return switch (port) {
-            case 80 -> "HTTP";
-            case 443 -> "HTTPS";
-            case 53 -> "DNS";
-            case 67, 68 -> "DHCP";
-            case 22 -> "SSH";
-            case 21 -> "FTP";
-            case 25 -> "SMTP";
-            case 110 -> "POP3";
-            case 143 -> "IMAP";
-            default -> "UNKNOWN";
+            case 80      -> "HTTP";
+            case 443     -> "HTTPS";
+            case 53      -> "DNS";
+            case 67, 68  -> "DHCP";
+            case 22      -> "SSH";
+            case 21      -> "FTP";
+            case 25      -> "SMTP";
+            case 110     -> "POP3";
+            case 143     -> "IMAP";
+            default      -> "UNKNOWN";
         };
     }
 
-    public List<PacketData> getRecentPackets(int limit) {
-        List<PacketData> packets = new ArrayList<>(packetQueue);
-        return packets.subList(Math.max(0, packets.size() - limit), packets.size());
-    }
+    public boolean isCapturing() { return capturing; }
 
-    public PacketStatistics getStatistics() {
-        statistics.setTopTalkers(getTopTalkers());
-        return statistics;
-    }
-
-    private Map<String, Integer> getTopTalkers() {
-        return sourceIpStats.entrySet().stream()
-                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
-                .limit(TOP_TALKERS_LIMIT)
-                .collect(LinkedHashMap::new,
-                        (m, e) -> m.put(e.getKey(), e.getValue()),
-                        LinkedHashMap::putAll);
-    }
-
-    public boolean isCapturing() {
-        return capturing;
-    }
+    public String getActiveInterface() { return activeInterface; }
 }

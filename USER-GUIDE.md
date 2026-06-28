@@ -8,7 +8,7 @@ If you've just downloaded NetworkPacketAnalyzer, follow this guide to get it run
 
 Before downloading, ensure you have:
 
-- **Java 21 LTS or later** installed
+- **Java 23 or later** installed
 - **LibPcap development libraries** installed
 
 ### Verify Java is Installed
@@ -20,10 +20,10 @@ java -version
 # Windows
 java -version
 
-# Should show Java 21 or later
+# Should show Java 23 or later
 ```
 
-If you don't have Java, download from: https://jdk.java.net/21/
+If you don't have Java, download from: https://jdk.java.net/23/
 
 ## Step 2: Download the Application
 
@@ -92,10 +92,10 @@ sudo java -jar NetworkPacketAnalyzer.jar
 ## Step 5: Troubleshooting
 
 ### "Java not found"
-- **Solution**: Install Java 21 LTS from https://jdk.java.net/21/
+- **Solution**: Install Java 23 from https://jdk.java.net/23/
 - Or use your system package manager:
-  - Ubuntu/Debian: `sudo apt install openjdk-21-jdk`
-  - macOS: `brew install openjdk@21`
+  - Ubuntu/Debian: `sudo apt install openjdk-23-jdk`
+  - macOS: `brew install openjdk@23`
 
 ### "Cannot find or open libpcap"
 - **Solution**: Install LibPcap development libraries
@@ -158,7 +158,7 @@ NetworkPacketAnalyzer-1.0-SNAPSHOT/
 ├── run.bat                          (Launcher for Windows)
 ├── DISTRIBUTION.md                 (Detailed installation guide)
 ├── README-DOWNLOAD.md              (Quick start guide)
-└── JAVA_21_UPGRADE.md              (Technical details)
+└── JAVA_23_UPGRADE.md              (Technical details)
 ```
 
 ## Key Features
@@ -166,7 +166,7 @@ NetworkPacketAnalyzer-1.0-SNAPSHOT/
 ✅ **Self-Contained**: All dependencies bundled in the JAR  
 ✅ **Cross-Platform**: Runs on Windows, macOS, Linux  
 ✅ **No Compilation Needed**: Just download and run  
-✅ **Java 21 LTS**: Modern Java with long-term support  
+✅ **Java 23**: Modern Java with high performance
 ✅ **Network Analysis**: Packet capture and analysis using pcap4j  
 
 ## System Information
@@ -175,7 +175,7 @@ NetworkPacketAnalyzer-1.0-SNAPSHOT/
 |--------|---------|
 | **Package Type** | Executable Fat JAR |
 | **Dependencies Bundled** | Yes (all included) |
-| **Java Requirement** | Java 21 LTS or later |
+| **Java Requirement** | Java 23 or later |
 | **External Dependencies** | LibPcap only |
 | **Package Size** | 2.9 MB (JAR), ~3 MB (compressed) |
 | **Installation** | Extract and run |
@@ -185,13 +185,13 @@ NetworkPacketAnalyzer-1.0-SNAPSHOT/
 
 For more detailed information:
 - **Installation Details**: See `DISTRIBUTION.md` in the package
-- **Java Upgrade Info**: See `JAVA_21_UPGRADE.md` in the package
+- **Java Upgrade Info**: See `JAVA_23_UPGRADE.md` in the package
 - **Quick Start**: See `README-DOWNLOAD.md` in the package
 
 ## Summary
 
 1. ✅ Download the package for your OS
-2. ✅ Install Java 21 (if needed)
+2. ✅ Install Java 23 (if needed)
 3. ✅ Install LibPcap (if needed)
 4. ✅ Extract the package
 5. ✅ Run with `./run.sh` (Linux/macOS) or `run.bat` (Windows)
