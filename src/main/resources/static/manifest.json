@@ -1,7 +1,7 @@
 {
-  "name": "NetPulse — Packet Analyzer",
+  "name": "NetPulse — Network VPN & Analyzer",
   "short_name": "NetPulse",
-  "description": "Real-time network packet monitoring and statistics",
+  "description": "Real-time network packet monitoring and WireGuard VPN management",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -9,8 +9,13 @@
   "theme_color": "#6366f1",
   "orientation": "any",
   "lang": "en",
-  "categories": ["utilities", "productivity"],
+  "categories": ["utilities", "productivity", "network"],
   "icons": [
+    {
+      "src": "/icons/logo.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    },
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",

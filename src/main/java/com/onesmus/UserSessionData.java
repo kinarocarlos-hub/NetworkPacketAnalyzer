@@ -21,11 +21,11 @@ public class UserSessionData {
         }
         statistics.incrementTotalPackets();
         // Update stats based on protocol
-        if ("TCP".equals(data.getProtocol())) statistics.incrementTcpPackets();
-        else if ("UDP".equals(data.getProtocol())) statistics.incrementUdpPackets();
+        if ("TCP".equals(data.protocol())) statistics.incrementTcpPackets();
+        else if ("UDP".equals(data.protocol())) statistics.incrementUdpPackets();
         else statistics.incrementOtherPackets();
         
-        sourceIpStats.merge(data.getSourceIp(), 1, Integer::sum);
+        sourceIpStats.merge(data.sourceIp(), 1, Integer::sum);
     }
 
     public List<PacketData> getRecentPackets(int limit) {
