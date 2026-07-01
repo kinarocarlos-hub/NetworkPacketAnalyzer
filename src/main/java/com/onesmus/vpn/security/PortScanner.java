@@ -11,68 +11,64 @@ import java.util.List;
 
 @Component
 public class PortScanner implements SecurityScanner {
-    private static final int WG_PORT = 51820;
-    private static final int API_PORT = 8080;
-    private static final int MANAGEMENT_PORT = 9090;
-    
+
+    private static final int[] EXPECTED_PORTS = {51820, 8080, 9090};
+
     @Override
-    public String getScannerName() {
+    public String getName() {
         return "PortScanner";
     }
-    
+
     @Override
-    public List<SecurityFinding> scan(VPnNode node) throws ScanException {
+    public List<SecurityFinding> scan(VPnNode node) throws ScanError {
         List<SecurityFinding> findings = new ArrayList<>();
-        String target = node.getPublicIp();
-        
+        String host = node.getPublicIp();
+
         try {
-            List<Integer> openPorts = scanPorts(target);
-            
-            for (Integer port : openPorts) {
-                if (port != WG_PORT && port != API_PORT && port != MANAGEMENT_PORT) {
-                    findings.add(new SecurityFinding(
-                        node.getId(),
-                        SecurityFinding.FindingType.OPEN_PORT,
-                        SecurityFinding.Severity.MEDIUM,
-                        "Unexpected open port detected: " + port
-                    ));
+            List<Integer> open = runNmap(host);
+            for (int port : open) {
+                if (!isExpectedPort(port)) {
+                    findings.add(new SecurityFinding(node.getId(),
+                            SecurityFinding.FindingType.OPEN_PORT,
+                            SecurityFinding.Severity.MEDIUM,
+                            "Unexpected open port: " + port));
                 }
             }
-            
             return findings;
-        } catch (Exception e) {
-            throw new ScanException("Port scan failed for node " + node.getName(), e);
+        } catch (Exception err) {
+            throw new ScanError("nmap failed on " + host, err);
         }
     }
-    
-    private List<Integer> scanPorts(String target) throws Exception {
-        List<Integer> openPorts = new ArrayList<>();
-        
-        Process process = Runtime.getRuntime().exec(
-            new String[]{"nmap", "-p", "1-1024", "--open", target}
-        );
-        
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(process.getInputStream()))) {
+
+    private List<Integer> runNmap(String host) throws Exception {
+        List<Integer> open = new ArrayList<>();
+        Process proc = Runtime.getRuntime().exec(
+                new String[]{"nmap", "-p", "1-1024", "--open", host});
+        proc.waitFor();
+
+        try (BufferedReader rdr = new BufferedReader(
+                new InputStreamReader(proc.getInputStream()))) {
             String line;
-            while ((line = reader.readLine()) != null) {
+            while ((line = rdr.readLine()) != null) {
                 if (line.contains("/tcp")) {
-                    String port = line.split("/")[0].trim();
-                    openPorts.add(Integer.parseInt(port));
+                    open.add(Integer.parseInt(line.split("/")[0].trim()));
                 }
             }
         }
-        
-        process.waitFor();
-        return openPorts;
+        return open;
     }
-    
+
+    private boolean isExpectedPort(int port) {
+        for (int p : EXPECTED_PORTS) if (p == port) return true;
+        return false;
+    }
+
     @Override
     public ScanResult scanAsync(VPnNode node) {
         try {
             return new ScanResult(node, scan(node));
-        } catch (Exception e) {
-            return new ScanResult(node, e.getMessage());
+        } catch (ScanError err) {
+            return new ScanResult(node, err.getMessage());
         }
     }
 }

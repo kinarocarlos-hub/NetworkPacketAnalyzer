@@ -5,13 +5,12 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.File;
+import java.security.Principal;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -19,87 +18,78 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class PacketController {
 
-    private final PacketCaptureService captureService;
-    private final CarlosService carlosService;
-    private final SessionManager sessionManager;
+    private final PacketCaptureService capture;
+    private final CarlosService carlos;
+    private final SessionManager sessions;
 
-    public PacketController(PacketCaptureService captureService, CarlosService carlosService, SessionManager sessionManager) {
-        this.captureService = captureService;
-        this.carlosService  = carlosService;
-        this.sessionManager = sessionManager;
+    @Value("${netpulse.android.apk-path:}")
+    private String androidApkPath;
+
+    public PacketController(PacketCaptureService capture, CarlosService carlos, SessionManager sessions) {
+        this.capture = capture;
+        this.carlos = carlos;
+        this.sessions = sessions;
     }
 
     @GetMapping("/interfaces")
-    public Map<String, Object> getInterfaces() {
-        return Map.of(
-                "interfaces", captureService.getAvailableInterfaces(),
-                "active", captureService.getActiveInterface() != null ? captureService.getActiveInterface() : ""
-        );
+    public Map<String, Object> interfaces() {
+        return Map.of("interfaces", capture.getAvailableInterfaces(),
+                "active", capture.getActiveInterface() != null ? capture.getActiveInterface() : "");
     }
 
     @GetMapping("/packets")
-    public Map<String, Object> getRecentPackets(@AuthenticationPrincipal UserDetails user, @RequestParam(defaultValue = "50") int limit) {
-        UserSessionData session = sessionManager.getSession(user.getUsername());
-        var packets = session.getRecentPackets(limit);
-        return Map.of("packets", packets, "count", packets.size(), "timestamp", System.currentTimeMillis());
+    public Map<String, Object> packets(Principal user, @RequestParam(defaultValue = "50") int limit) {
+        var s = sessions.get(user.getName());
+        var list = s.recent(limit);
+        return Map.of("packets", list, "count", list.size(), "timestamp", System.currentTimeMillis());
     }
 
     @GetMapping("/statistics")
-    public Map<String, Object> getStatistics(@AuthenticationPrincipal UserDetails user) {
-        UserSessionData session = sessionManager.getSession(user.getUsername());
-        PacketStatistics stats = session.getStatistics();
-        Map<String, Object> response = new HashMap<>();
-        response.put("totalPackets", stats.getTotalPackets());
-        response.put("tcpPackets", stats.getTcpPackets());
-        response.put("udpPackets", stats.getUdpPackets());
-        response.put("otherPackets", stats.getOtherPackets());
-        response.put("topTalkers", stats.getTopTalkers());
-        response.put("timestamp", System.currentTimeMillis());
-        return response;
+    public Map<String, Object> stats(Principal user) {
+        var s = sessions.get(user.getName()).stats();
+        Map<String, Object> r = new HashMap<>();
+        r.put("totalPackets", s.getTotalPackets());
+        r.put("tcpPackets", s.getTcpPackets());
+        r.put("udpPackets", s.getUdpPackets());
+        r.put("otherPackets", s.getOtherPackets());
+        r.put("topTalkers", s.getTopTalkers());
+        r.put("timestamp", System.currentTimeMillis());
+        return r;
     }
 
     @GetMapping("/admin/all-stats")
-    public Map<String, Object> getAllStats() {
-        Map<String, Object> response = new HashMap<>();
-        sessionManager.getAllSessions().forEach((user, session) -> {
-            response.put(user, session.getStatistics().getTotalPackets());
-        });
-        return response;
-    }
-
-    @GetMapping("/me")
-    public Map<String, Object> getCurrentUser(@AuthenticationPrincipal UserDetails user) {
-        return Map.of(
-                "username", user.getUsername(),
-                "roles", user.getAuthorities().stream().map(a -> a.getAuthority()).toList()
-        );
+    public Map<String, Object> allStats() {
+        Map<String, Object> r = new HashMap<>();
+        sessions.all().forEach((u, s) -> r.put(u, s.stats().getTotalPackets()));
+        return r;
     }
 
     @GetMapping("/status")
-    public Map<String, Object> getStatus() {
-        return Map.of(
-                "capturing", captureService.isCapturing(),
-                "interface", captureService.getActiveInterface() != null ? captureService.getActiveInterface() : "",
-                "timestamp", System.currentTimeMillis()
-        );
+    public Map<String, Object> status() {
+        return Map.of("capturing", capture.isCapturing(),
+                "interface", capture.getActiveInterface() != null ? capture.getActiveInterface() : "",
+                "timestamp", System.currentTimeMillis());
     }
 
     @PostMapping("/start")
-    public Map<String, String> startCapture(@RequestParam(required = false) String iface) {
-        captureService.startCapture(iface);
-        return Map.of("status", "started", "message", "Packet capture started on " +
-                (captureService.getActiveInterface() != null ? captureService.getActiveInterface() : "unknown"));
+    public Map<String, String> start(@RequestParam(required = false) String iface) {
+        capture.start(iface);
+        return Map.of("status", "started", "message", "Capture started on " +
+                (capture.getActiveInterface() != null ? capture.getActiveInterface() : "unknown"));
     }
 
     @PostMapping("/stop")
-    public Map<String, String> stopCapture() {
-        captureService.stopCapture();
-        return Map.of("status", "stopped", "message", "Packet capture stopped");
+    public Map<String, String> stop() {
+        capture.stop();
+        return Map.of("status", "stopped", "message", "Capture stopped");
     }
 
     @GetMapping("/download/android")
-    public ResponseEntity<Resource> downloadAndroid() {
-        File apk = new File("/home/onesmus/IdeaProjects/NetPulseAndroid/app/build/outputs/apk/debug/app-debug.apk");
+    public ResponseEntity<Resource> downloadApk() {
+        String apkPath = androidApkPath.isBlank()
+            ? "/home/onesmus/IdeaProjects/NetPulseAndroid/app/build/outputs/apk/debug/app-debug.apk"
+            : androidApkPath;
+        File apk = new File(apkPath);
         if (!apk.exists()) {
             return ResponseEntity.notFound().build();
         }
@@ -112,23 +102,24 @@ public class PacketController {
 
     @GetMapping("/download/status")
     public Map<String, Object> downloadStatus() {
-        File apk = new File("/home/onesmus/IdeaProjects/NetPulseAndroid/app/build/outputs/apk/debug/app-debug.apk");
+        String apkPath = androidApkPath.isBlank()
+            ? "/home/onesmus/IdeaProjects/NetPulseAndroid/app/build/outputs/apk/debug/app-debug.apk"
+            : androidApkPath;
+        File apk = new File(apkPath);
         return Map.of("available", apk.exists(), "size", apk.exists() ? apk.length() : 0);
     }
 
     @PostMapping("/carlos/chat")
-    public Map<String, String> carlosChat(@AuthenticationPrincipal UserDetails user, @RequestBody Map<String, String> body) {
-        String message = body.getOrDefault("message", "").trim();
-        if (message.isEmpty()) return Map.of("reply", "Please ask me something!");
-        
-        UserSessionData session = sessionManager.getSession(user.getUsername());
-        String reply = carlosService.chat(message,
-                session.getStatistics(), session.getRecentPackets(50));
-        return Map.of("reply", reply);
+    public Map<String, String> chat(Principal user, @RequestBody Map<String, String> body) {
+        String msg = body.getOrDefault("message", "").trim();
+        if (msg.isEmpty()) return Map.of("reply", "Please ask me something!");
+
+        var session = sessions.get(user.getName());
+        return Map.of("reply", carlos.chat(msg, session.stats(), session.recent(50)));
     }
 
     @GetMapping("/carlos/status")
     public Map<String, Object> carlosStatus() {
-        return Map.of("configured", carlosService.hasApiKey());
+        return Map.of("configured", carlos.hasApiKey());
     }
 }

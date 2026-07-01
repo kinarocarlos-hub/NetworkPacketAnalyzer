@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>MFA Verification - NetPulse</title>
+  <style>
+    :root { --primary:#6366f1; --bg:#0a0f1e; --card:#1e293b; --text:#f1f5f9; --error:#f87171; }
+    body { font-family: system-ui; background:var(--bg); margin:0; padding:2rem; display:flex; justify-content:center; align-items:center; min-height:100vh; color:var(--text); }
+    .card { background:var(--card); padding:2rem; border-radius:8px; box-shadow:0 2px 12px rgba(0,0,0,.3); width:100%; max-width:400px; }
+    h1 { margin:0 0 1rem; }
+    input { width:100%; padding:.75rem; margin:.5rem 0; border:1px solid #334155; border-radius:4px; background:#0f172a; color:var(--text); }
+    button { width:100%; padding:.75rem; margin:.5rem 0; background:var(--primary); color:#fff; border:none; border-radius:4px; cursor:pointer; }
+    .error { color:var(--error); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Verify MFA</h1>
+    <p>Enter the code from your authenticator app or email.</p>
+    <form id="mfaForm">
+      <input type="hidden" id="userId">
+      <input type="text" id="code" placeholder="6-digit code" required>
+      <div class="error" id="err"></div>
+      <button type="submit">Verify</button>
+    </form>
+    <p style="text-align:center;margin-top:.5rem"><a href="/mfa-email" id="emailLink">Send via email instead</a></p>
+  </div>
+  <script>
+    const params = new URLSearchParams(location.search);
+    userId.value = params.get("userId") || "";
+
+    document.getElementById('mfaForm').onsubmit = e => {
+      e.preventDefault();
+      fetch('/api/auth/mfa/verify', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({userId: userId.value, code: code.value})
+      }).then(r => r.json()).then(d => {
+        if (d.valid) location.href = '/dashboard';
+        else err.textContent = d.error || 'Invalid code';
+      });
+    };
+
+    document.getElementById('emailLink').onclick = e => {
+      e.preventDefault();
+      fetch('/api/auth/mfa/send-email-code', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({userId: userId.value})
+      }).then(() => alert('Code sent to your email'));
+    };
+  </script>
+</body>
+</html>

@@ -8,37 +8,28 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class UserSessionData {
-    private static final int BUFFER_SIZE = 1000;
-    
-    private final BlockingQueue<PacketData> packetQueue = new LinkedBlockingQueue<>(BUFFER_SIZE);
-    private final PacketStatistics statistics = new PacketStatistics();
-    private final Map<String, Integer> sourceIpStats = new ConcurrentHashMap<>();
 
-    public void addPacket(PacketData data) {
-        if (!packetQueue.offer(data)) {
-            packetQueue.poll();
-            packetQueue.offer(data);
+    private static final int CAP = 1000;
+
+    private final BlockingQueue<PacketData> packets = new LinkedBlockingQueue<>(CAP);
+    private final PacketStatistics stats = new PacketStatistics();
+    private final Map<String, Integer> ipCounts = new ConcurrentHashMap<>();
+
+    public void add(PacketData data) {
+        if (!packets.offer(data)) {
+            packets.poll();
+            packets.offer(data);
         }
-        statistics.incrementTotalPackets();
-        // Update stats based on protocol
-        if ("TCP".equals(data.protocol())) statistics.incrementTcpPackets();
-        else if ("UDP".equals(data.protocol())) statistics.incrementUdpPackets();
-        else statistics.incrementOtherPackets();
-        
-        sourceIpStats.merge(data.sourceIp(), 1, Integer::sum);
+        stats.recordPacket(data.sourceIp(), "TCP".equals(data.protocol()), "UDP".equals(data.protocol()));
+        ipCounts.merge(data.sourceIp(), 1, Integer::sum);
     }
 
-    public List<PacketData> getRecentPackets(int limit) {
-        var packets = new ArrayList<>(packetQueue);
-        return packets.subList(Math.max(0, packets.size() - limit), packets.size());
+    public List<PacketData> recent(int limit) {
+        int from = Math.max(0, packets.size() - limit);
+        return new ArrayList<>(packets).subList(from, packets.size());
     }
 
-    public PacketStatistics getStatistics() {
-        // Top talkers calculation would go here or be updated on add
-        return statistics;
-    }
+    public PacketStatistics stats() { return stats; }
 
-    public Map<String, Integer> getSourceIpStats() {
-        return sourceIpStats;
-    }
+    public Map<String, Integer> ipCounts() { return ipCounts; }
 }

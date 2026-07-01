@@ -1,6 +1,8 @@
 package com.onesmus.vpn;
 
 import com.onesmus.vpn.security.SecurityScanner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
@@ -9,43 +11,48 @@ import java.util.List;
 
 @Service
 public class SecurityScannerService {
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityScannerService.class);
+
     private final List<SecurityScanner> scanners;
-    private final VPNNodeRepository nodeRepository;
-    private final SecurityFindingRepository findingRepository;
-    private final TaskScheduler taskScheduler;
-    
-    public SecurityScannerService(List<SecurityScanner> scanners, VPNNodeRepository nodeRepository,
-                                   SecurityFindingRepository findingRepository, TaskScheduler taskScheduler) {
+    private final VPNNodeRepository nodeRepo;
+    private final SecurityFindingRepository findingRepo;
+    private final TaskScheduler scheduler;
+
+    public SecurityScannerService(List<SecurityScanner> scanners, VPNNodeRepository nodeRepo,
+                                  SecurityFindingRepository findingRepo, TaskScheduler scheduler) {
         this.scanners = scanners;
-        this.nodeRepository = nodeRepository;
-        this.findingRepository = findingRepository;
-        this.taskScheduler = taskScheduler;
+        this.nodeRepo = nodeRepo;
+        this.findingRepo = findingRepo;
+        this.scheduler = scheduler;
     }
-    
+
     public void scheduleScans() {
-        for (VPnNode node : nodeRepository.findAll()) {
-            scheduleNodeScans(node);
+        for (VPnNode node : nodeRepo.findAll()) {
+            scheduleScansForNode(node);
         }
     }
-    
-    private void scheduleNodeScans(VPnNode node) {
+
+    private void scheduleScansForNode(VPnNode node) {
         for (SecurityScanner scanner : scanners) {
-            final var sc = scanner;
-            final var nd = node;
-            taskScheduler.scheduleAtFixedRate(() -> runScan(nd, sc), Duration.ofMinutes(5));
+            VPnNode nd = node; // capture for lambda
+            SecurityScanner sc = scanner;
+            scheduler.scheduleAtFixedRate(() -> runScanner(nd, sc), Duration.ofMinutes(5));
         }
     }
-    
-    private void runScan(VPnNode node, SecurityScanner scanner) {
+
+    private void runScanner(VPnNode node, SecurityScanner scanner) {
         try {
-            var result = scanner.scanAsync(node);
-            if (result.isCompleted()) {
-                for (SecurityFinding finding : result.getFindings()) {
-                    findingRepository.save(finding);
+            SecurityScanner.ScanResult result = scanner.scanAsync(node);
+            if (result.isSuccess()) {
+                for (SecurityFinding f : result.getFindings()) {
+                    findingRepo.save(f);
                 }
+            } else {
+                log.warn("Scanner {} failed on {}: {}", scanner.getName(), node.getName(), result.getError());
             }
-        } catch (Exception e) {
-            // Log but don't crash the scheduler
+        } catch (Exception err) {
+            log.error("Scanner {} crashed: {}", scanner.getName(), err.getMessage());
         }
     }
 }

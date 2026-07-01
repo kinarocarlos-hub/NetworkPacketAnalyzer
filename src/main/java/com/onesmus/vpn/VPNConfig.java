@@ -7,17 +7,17 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 @Configuration
 public class VPNConfig {
-    
+
     @Bean
     public KeyExchangeService keyExchangeService() {
         return new Curve25519KeyExchangeService();
     }
-    
+
     @Bean
     public TaskScheduler taskScheduler() {
-        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-        scheduler.setPoolSize(4);
-        scheduler.setThreadNamePrefix("vpn-scanner-");
-        return scheduler;
+        ThreadPoolTaskScheduler ts = new ThreadPoolTaskScheduler();
+        ts.setPoolSize(4);
+        ts.setThreadNamePrefix("vpn-scan-");
+        return ts;
     }
 }

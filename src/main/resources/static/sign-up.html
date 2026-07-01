@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - NetPulse</title>
+  <style id="theme">
+    :root { --primary:#6366f1; --bg:#0a0f1e; --card:#1e293b; --text:#f1f5f9; --error:#f87171; }
+    body { font-family: system-ui; background:var(--bg); margin:0; padding:2rem; display:flex; justify-content:center; align-items:center; min-height:100vh; color:var(--text); }
+    .card { background:var(--card); padding:2rem; border-radius:8px; box-shadow:0 2px 12px rgba(0,0,0,.3); width:100%; max-width:400px; }
+    h1 { margin:0 0 1rem; }
+    input { width:100%; padding:.75rem; margin:.5rem 0; border:1px solid #334155; border-radius:4px; background:#0f172a; color:var(--text); }
+    button { width:100%; padding:.75rem; margin:.5rem 0; background:var(--primary); color:#fff; border:none; border-radius:4px; cursor:pointer; }
+    .error { color:var(--error); font-size:.875rem; }
+    a { color:var(--primary); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Create Account</h1>
+    <form id="register">
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="text" id="name" placeholder="Username">
+      <input type="password" id="pass" placeholder="Password" required>
+      <div style="margin:.5rem 0">
+        <label style="font-size:.875rem">
+          <input type="checkbox" id="legal" required>
+          I agree to Terms of Service and Privacy Policy
+        </label>
+      </div>
+      <div class="error" id="err"></div>
+      <div id="clerk-captcha"></div>
+      <button type="submit">Sign Up</button>
+    </form>
+    <p style="text-align:center;margin-top:1rem"><a href="/sign-in">Already have an account</a></p>
+  </div>
+  <script>
+    fetch('/api/auth/appearance').then(r => r.json()).then(cfg => {
+      if (cfg.variables?.primaryColor) document.documentElement.style.setProperty('--primary', cfg.variables.primaryColor);
+    }).catch(() => {});
+
+    document.getElementById('register').onsubmit = e => {
+      e.preventDefault();
+      if (!legal.checked) return err.textContent = 'Please accept terms';
+      fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({email: email.value, password: pass.value, username: name.value, legalAccepted: true})
+      }).then(r => r.json()).then(d => {
+        if (d.id) location.href = '/sign-in';
+        else err.textContent = d.error || 'Registration failed';
+      });
+    };
+  </script>
+</body>
+</html>
