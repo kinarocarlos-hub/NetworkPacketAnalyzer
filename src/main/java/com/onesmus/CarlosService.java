@@ -1,18 +1,24 @@
 package com.onesmus;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class CarlosService {
 
+    @Value("${carlos.gemini.api-key:}")
+    private String apiKey;
+
     // ── Intent keywords ──────────────────────────────────────────────────────
     private static final Map<String, List<String>> INTENTS = Map.of(
         "threat",     List.of("threat","attack","hack","malware","suspicious","danger","scan","intrusion","exploit","malicious"),
         "talkers",    List.of("talker","top","most","active","busiest","who","which ip","bandwidth","heavy"),
-        "protocol",   List.of("protocol","http","https","dns","tcp","udp","ssh","ftp","smtp","dhcp","what is","explain"),
+        "protocol",   List.of("protocol","http","https","dns","tcp","udp","ssh","ftp","smtp","what is","explain"),
         "anomaly",    List.of("anomaly","unusual","strange","weird","odd","unexpected","spike","surge","abnormal"),
         "stats",      List.of("stat","total","count","how many","number","summary","overview","report"),
         "status",     List.of("status","running","capturing","active","online","working","capture"),
@@ -21,32 +27,38 @@ public class CarlosService {
 
     // ── Known malicious / suspicious ports ───────────────────────────────────
     private static final Set<Integer> SUSPICIOUS_PORTS = Set.of(
-        4444, 5555, 6666, 7777, 8888, 9999,  // common backdoor ports
-        1337, 31337,                           // hacker ports
-        12345, 54321,                          // trojan ports
-        3389,                                  // RDP brute force target
-        23,                                    // Telnet (unencrypted)
-        445, 139,                              // SMB (WannaCry etc.)
-        1433, 3306, 5432                       // exposed databases
+        4444, 5555, 6666, 7777, 8888, 9999,
+        1337, 31337,
+        12345, 54321,
+        3389,
+        23,
+        445, 139,
+        1433, 3306, 5432
     );
 
-    private static final Set<String> PRIVATE_RANGES = Set.of("10.", "192.168.", "172.16.", "172.17.", "172.18.");
+    public boolean hasApiKey() {
+        return apiKey != null && !apiKey.isBlank();
+    }
 
-    // ── Conversation history (last 6 exchanges) ───────────────────────────────
     private final LinkedList<String[]> history = new LinkedList<>();
-
-    public boolean hasApiKey() { return true; } // always ready — no key needed
 
     public String chat(String userMessage, PacketStatistics stats, List<PacketData> packets) {
         String msg = userMessage.toLowerCase().trim();
         String intent = classifyIntent(msg);
         String response = generateResponse(intent, msg, stats, packets);
 
-        // Keep history
         history.addLast(new String[]{ userMessage, response });
         if (history.size() > 6) history.removeFirst();
 
         return response;
+    }
+
+    private boolean isPrivateIp(String ip) {
+        try {
+            return InetAddress.getByName(ip).isSiteLocalAddress();
+        } catch (UnknownHostException e) {
+            return false;
+        }
     }
 
     // ── Intent classifier ────────────────────────────────────────────────────
@@ -100,8 +112,7 @@ public class CarlosService {
 
             // Count external IPs
             String src = p.sourceIp();
-            boolean isPrivate = PRIVATE_RANGES.stream().anyMatch(src::startsWith);
-            if (!isPrivate && !src.startsWith("127.")) externalCount++;
+            if (!isPrivateIp(src) && !src.startsWith("127.")) externalCount++;
         }
 
         // Port scan detection
@@ -151,7 +162,6 @@ public class CarlosService {
                "\n\nAnalyzed " + packets.size() + " packets. Stay vigilant!\n\n— Carlos";
     }
 
-    // ── Top talkers analysis ─────────────────────────────────────────────────
     private String analyzeTopTalkers(PacketStatistics stats) {
         Map<String, Integer> talkers = stats.getTopTalkers();
         if (talkers.isEmpty()) {
@@ -166,7 +176,7 @@ public class CarlosService {
             String ip = entry.getKey();
             int count = entry.getValue();
             double pct = total > 0 ? (double) count / total * 100 : 0;
-            boolean isPrivate = PRIVATE_RANGES.stream().anyMatch(ip::startsWith);
+            boolean isPrivate = isPrivateIp(ip);
             String tag = isPrivate ? "🏠 local" : "🌐 external";
 
             sb.append(rank++).append(". **").append(ip).append("** (").append(tag).append(")\n");

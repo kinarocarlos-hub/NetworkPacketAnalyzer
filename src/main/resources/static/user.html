@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - NetPulse</title>
+  <style>
+    :root { --primary:#6366f1; --bg:#f9fafb; --card:#fff; --text:#1f2937; }
+    body { font-family: system-ui; background:var(--bg); margin:0; padding:2rem; }
+    .card { background:var(--card); padding:2rem; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.1); max-width:600px; margin:auto; }
+    h1 { margin:0 0 1rem; color:var(--text); }
+    input, button { padding:.75rem; margin:.5rem 0; border:1px solid #e5e7eb; border-radius:4px; }
+    button { background:var(--primary); color:#fff; border:none; cursor:pointer; }
+    .section { margin:1.5rem 0 0; padding:1rem 0; border-top:1px solid #e5e7eb; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Profile Settings</h1>
+    <div id="profile"></div>
+    <div class="section">
+      <h3>Email Verification</h3>
+      <button onclick="verifyEmail()">Verify Email</button>
+    </div>
+    <div class="section">
+      <h3>Two-Factor Auth</h3>
+      <button id="mfaBtn" onclick="toggleMfa()">Enable MFA</button>
+    </div>
+    <div class="section">
+      <h3>Session</h3>
+      <button onclick="refreshSession()">Refresh Session</button>
+    </div>
+  </div>
+  <script>
+    const userId = localStorage.getItem('userId');
+    const token = localStorage.getItem('token');
+    
+    async function loadProfile() {
+      const res = await fetch('/api/auth/users/' + userId);
+      const data = await res.json();
+      profile.innerHTML = `
+        <p><strong>Email:</strong> ${data.email}</p>
+        <p><strong>Username:</strong> ${data.username}</p>
+        <p><strong>Email Verified:</strong> ${data.emailVerified}</p>
+        <p><strong>MFA Enabled:</strong> ${data.mfaEnabled}</p>
+      `;
+      mfaBtn.textContent = data.mfaEnabled ? 'Disable MFA' : 'Enable MFA';
+    }
+    
+    async function verifyEmail() {
+      await fetch('/api/auth/verify-email?userId=' + userId + '&token=123');
+      loadProfile();
+    }
+    
+    async function toggleMfa() {
+      await fetch('/api/auth/mfa/enable?userId=' + userId, {method: 'POST'});
+      loadProfile();
+    }
+    
+    async function refreshSession() {
+      const res = await fetch('/api/auth/sessions/refresh?oldToken=' + token, {method: 'POST'});
+      const data = await res.json();
+      localStorage.setItem('token', data.token);
+      alert('Session refreshed');
+    }
+    
+    if (userId) loadProfile();
+  </script>
+</body>
+</html>

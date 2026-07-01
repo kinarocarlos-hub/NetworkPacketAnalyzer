@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Organization - NetPulse</title>
+  <style>
+    :root { --primary:#6366f1; --bg:#f9fafb; --card:#fff; --text:#1f2937; }
+    body { font-family: system-ui; background:var(--bg); margin:0; padding:2rem; }
+    .card { background:var(--card); padding:2rem; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.1); max-width:600px; margin:auto; }
+    h1 { margin:0 0 1rem; color:var(--text); }
+    input, button { padding:.75rem; margin:.5rem 0; border:1px solid #e5e7eb; border-radius:4px; }
+    button { background:var(--primary); color:#fff; border:none; cursor:pointer; }
+    .section { margin:1.5rem 0 0; padding:1rem 0; border-top:1px solid #e5e7eb; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { padding:.5rem; text-align:left; border-bottom:1px solid #e5e7eb; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Organization Portal</h1>
+    <div class="section">
+      <h3>Your Organizations</h3>
+      <div id="orgs"></div>
+    </div>
+    <div class="section">
+      <h3>Create Organization</h3>
+      <input type="text" id="orgName" placeholder="Organization Name">
+      <input type="text" id="orgSlug" placeholder="Slug (e.g., my-org)">
+      <button onclick="createOrg()">Create</button>
+    </div>
+    <div class="section">
+      <h3>Invite Member</h3>
+      <input type="email" id="inviteEmail" placeholder="Email to invite">
+      <button onclick="inviteMember()">Send Invite</button>
+    </div>
+  </div>
+  <script>
+    const userId = localStorage.getItem('userId');
+    
+    async function loadOrgs() {
+      const res = await fetch('/api/org/list?userId=' + userId);
+      const data = await res.json();
+      orgs.innerHTML = '<table><tr><th>Name</th><th>Slug</th><th>Role</th></tr>' +
+        (data.organizations || []).map(o => 
+          `<tr><td>${o.name}</td><td>${o.slug}</td><td>${o.role}</td></tr>`).join('') + 
+        '</table>';
+    }
+    
+    async function createOrg() {
+      await fetch('/api/org/create', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({name: orgName.value, slug: orgSlug.value, userId: userId})
+      });
+      loadOrgs();
+    }
+    
+    async function inviteMember() {
+      await fetch('/api/auth/invite', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({email: inviteEmail.value, inviterId: userId})
+      });
+      alert('Invite sent');
+    }
+    
+    if (userId) loadOrgs();
+  </script>
+</body>
+</html>
